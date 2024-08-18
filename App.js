@@ -1,20 +1,43 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, StatusBar } from 'react-native';
+import { Gyroscope, Accelerometer } from 'expo-sensors';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 export default function App() {
+  const [orientation, setOrientation] = useState('portrait');
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const rotation = orientation === 'landscape' ? 90 : 0;
+    return {
+      transform: [{ rotateZ: `${rotation}deg` }],
+    };
+  });
+
+  useEffect(() => {
+    const subscription = Accelerometer.addListener((data) => {
+      const { x, y, z } = data;
+      // Implement logic to determine orientation based on accelerometer data
+      // For example, you can check if x is significantly larger than y and z
+      const isLandscape = Math.abs(x) > 0.8; // Adjust threshold as needed
+      setOrientation(isLandscape ? 'landscape' : 'portrait');
+    });
+
+    return () => subscription.remove();
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+    <Animated.View style={[styles.container, animatedStyle]}>
+      <Text>Orientation: {orientation}</Text>
       <StatusBar style="auto" />
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',   
+
   },
 });
